@@ -1,0 +1,1135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sulong Endurance — Triathlon Training System</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@300;400;600;700;900&family=Barlow:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0a0e17;--panel:#111827;--panel2:#0d1520;--border:#1e2d45;
+  --swim:#00c8ff;--bike:#f9a825;--run:#ff4d6d;--hr:#a855f7;--ftp:#22c55e;--plan:#fb923c;
+  --text:#e8edf5;--muted:#5a6a80;--accent:#00c8ff;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--text);font-family:'Barlow',sans-serif;min-height:100vh;overflow-x:hidden;}
+body::before{content:'';position:fixed;inset:0;
+  background-image:linear-gradient(rgba(0,200,255,0.025) 1px,transparent 1px),linear-gradient(90deg,rgba(0,200,255,0.025) 1px,transparent 1px);
+  background-size:40px 40px;pointer-events:none;z-index:0;}
+
+header{position:relative;z-index:2;padding:20px 40px 18px;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;}
+.brand{display:flex;flex-direction:column;gap:2px;}
+.logo{font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:42px;letter-spacing:-1px;line-height:1;color:#fff;}
+.logo span{color:var(--swim);}
+.tagline{font-family:'Barlow Condensed',sans-serif;font-weight:300;font-size:11px;letter-spacing:5px;text-transform:uppercase;color:var(--muted);}
+.header-controls{display:flex;align-items:center;gap:20px;flex-wrap:wrap;}
+.unit-group{display:flex;flex-direction:column;gap:5px;align-items:center;}
+.unit-group-label{font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--muted);}
+.toggle-row{display:flex;align-items:center;gap:8px;}
+.toggle-row span{font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;letter-spacing:1px;color:var(--muted);min-width:26px;transition:color 0.2s;}
+.toggle-row span.on{color:var(--swim);}
+.toggle-switch{position:relative;width:50px;height:26px;}
+.toggle-switch input{opacity:0;width:0;height:0;}
+.toggle-slider{position:absolute;cursor:pointer;inset:0;background:#1e2d45;border:1px solid var(--border);transition:0.3s;}
+.toggle-slider::before{content:'';position:absolute;left:3px;top:3px;width:18px;height:18px;background:var(--swim);transition:0.3s;}
+input:checked+.toggle-slider::before{transform:translateX(24px);}
+.unit-divider{width:1px;height:40px;background:var(--border);}
+
+.race-bar{position:relative;z-index:2;background:var(--panel);border-bottom:1px solid var(--border);
+  padding:11px 40px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+.bar-label{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:11px;letter-spacing:3px;
+  text-transform:uppercase;color:var(--muted);margin-right:6px;white-space:nowrap;}
+.race-btn{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px;letter-spacing:1px;
+  padding:6px 15px;border:1px solid var(--border);background:transparent;color:var(--muted);
+  cursor:pointer;transition:all 0.2s;text-transform:uppercase;}
+.race-btn:hover{border-color:var(--swim);color:var(--swim);}
+.race-btn.active{background:var(--swim);border-color:var(--swim);color:#000;}
+.sys-badge{display:inline-block;font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;
+  letter-spacing:2px;padding:2px 10px;border:1px solid;margin-left:8px;vertical-align:middle;}
+.sys-metric{border-color:#4ade80;color:#4ade80;background:rgba(74,222,128,0.08);}
+.sys-imperial{border-color:#fb923c;color:#fb923c;background:rgba(251,146,60,0.08);}
+
+.main-nav{position:relative;z-index:2;background:var(--panel2);border-bottom:2px solid var(--border);display:flex;overflow-x:auto;}
+.nav-tab{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:14px;letter-spacing:2px;text-transform:uppercase;
+  padding:15px 24px;border:none;background:transparent;color:var(--muted);cursor:pointer;
+  border-bottom:3px solid transparent;transition:all 0.25s;white-space:nowrap;display:flex;align-items:center;gap:7px;}
+.nav-tab:hover{color:var(--text);}
+.nav-tab.active[data-nav="swim"]{color:var(--swim);border-bottom-color:var(--swim);}
+.nav-tab.active[data-nav="bike"]{color:var(--bike);border-bottom-color:var(--bike);}
+.nav-tab.active[data-nav="run"] {color:var(--run); border-bottom-color:var(--run);}
+.nav-tab.active[data-nav="hr"]  {color:var(--hr);  border-bottom-color:var(--hr);}
+.nav-tab.active[data-nav="ftp"] {color:var(--ftp); border-bottom-color:var(--ftp);}
+.nav-tab.active[data-nav="plan"]{color:var(--plan);border-bottom-color:var(--plan);}
+
+main{position:relative;z-index:1;max-width:1260px;margin:0 auto;padding:30px 40px 80px;}
+.section{display:none;animation:fadeIn 0.3s ease;}
+.section.active{display:block;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.panel-grid{display:grid;grid-template-columns:1fr 1fr;gap:22px;}
+
+.card{background:var(--panel);border:1px solid var(--border);padding:24px;}
+.card-title{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:11px;letter-spacing:3px;
+  text-transform:uppercase;color:var(--muted);margin-bottom:18px;display:flex;align-items:center;gap:8px;}
+.card-title::before{content:'';display:inline-block;width:10px;height:2px;background:currentColor;}
+
+.field{margin-bottom:15px;}
+label{display:block;font-family:'Barlow Condensed',sans-serif;font-weight:600;font-size:11px;
+  letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:6px;}
+.input-row{display:flex;gap:5px;}
+input[type="number"],input[type="text"],select{
+  width:100%;background:#0a0e17;border:1px solid var(--border);color:var(--text);
+  font-family:'Barlow Condensed',sans-serif;font-size:19px;font-weight:600;
+  padding:10px 13px;outline:none;transition:border-color 0.2s;-moz-appearance:textfield;}
+input[type="number"]::-webkit-inner-spin-button{display:none;}
+input[type="number"]:focus,select:focus{border-color:var(--accent);}
+select{font-size:14px;cursor:pointer;appearance:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%235a6a80' stroke-width='2' fill='none'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 12px center;padding-right:32px;}
+.unit-badge{background:#0a0e17;border:1px solid var(--border);border-left:none;
+  padding:10px 11px;font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:600;
+  letter-spacing:1px;color:var(--muted);white-space:nowrap;display:flex;align-items:center;}
+
+.calc-btn{width:100%;margin-top:6px;font-family:'Barlow Condensed',sans-serif;font-weight:900;
+  font-size:14px;letter-spacing:4px;text-transform:uppercase;padding:14px;border:none;cursor:pointer;transition:all 0.2s;}
+.calc-btn:hover{filter:brightness(1.15);transform:translateY(-1px);}
+.calc-btn:active{transform:translateY(0);}
+.btn-swim{background:var(--swim);color:#000;}.btn-bike{background:var(--bike);color:#000;}
+.btn-run{background:var(--run);color:#fff;}.btn-hr{background:var(--hr);color:#fff;}
+.btn-ftp{background:var(--ftp);color:#000;}.btn-plan{background:var(--plan);color:#000;}
+
+.result-item{display:flex;justify-content:space-between;align-items:flex-end;padding:10px 0;border-bottom:1px solid var(--border);}
+.result-item:last-child{border-bottom:none;}
+.result-label{font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--muted);}
+.result-value{font-family:'Barlow Condensed',sans-serif;font-size:25px;font-weight:700;line-height:1;}
+.result-unit{font-family:'Barlow',sans-serif;font-size:11px;font-weight:300;color:var(--muted);margin-left:3px;}
+.swim .result-value{color:var(--swim);}.bike .result-value{color:var(--bike);}.run .result-value{color:var(--run);}
+
+.coach-tip{margin-top:12px;border-left:3px solid var(--accent);padding:11px 15px;
+  background:rgba(0,200,255,0.05);font-size:12px;color:var(--muted);line-height:1.6;display:none;}
+.coach-tip strong{display:block;font-family:'Barlow Condensed',sans-serif;font-size:10px;
+  letter-spacing:3px;text-transform:uppercase;color:var(--swim);margin-bottom:4px;}
+
+/* PACE ZONES */
+.pace-zones-card{margin-top:20px;background:var(--panel);border:1px solid var(--border);padding:24px;display:none;}
+.pace-zones-title{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:11px;letter-spacing:3px;
+  text-transform:uppercase;margin-bottom:16px;display:flex;align-items:center;gap:8px;}
+.pace-zones-title::before{content:'';display:inline-block;width:10px;height:2px;background:currentColor;}
+.pz-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;}
+.pz-zone{padding:12px 10px;border:1px solid var(--border);text-align:center;}
+.pz-label{font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:4px;}
+.pz-pace{font-family:'Barlow Condensed',sans-serif;font-size:17px;font-weight:900;line-height:1;}
+.pz-unit{font-family:'Barlow',sans-serif;font-size:10px;color:var(--muted);margin-top:2px;}
+.pz-purpose{font-size:10px;color:var(--muted);margin-top:5px;line-height:1.4;font-family:'Barlow',sans-serif;}
+
+/* HR/FTP */
+.zone-table{width:100%;border-collapse:collapse;margin-top:6px;}
+.zone-table th{font-family:'Barlow Condensed',sans-serif;font-size:10px;letter-spacing:2px;text-transform:uppercase;
+  color:var(--muted);text-align:left;padding:7px 10px;border-bottom:1px solid var(--border);}
+.zone-table td{font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:600;padding:9px 10px;border-bottom:1px solid rgba(30,45,69,0.5);}
+.zone-row:hover{background:rgba(255,255,255,0.03);}
+.zone-badge{display:inline-block;padding:3px 9px;font-size:11px;font-weight:700;letter-spacing:1px;}
+.z1{background:rgba(96,165,250,0.18);color:#60a5fa;}.z2{background:rgba(74,222,128,0.18);color:#4ade80;}
+.z3{background:rgba(250,204,21,0.18);color:#facc15;}.z4{background:rgba(251,146,60,0.18);color:#fb923c;}
+.z5{background:rgba(248,113,113,0.18);color:#f87171;}.z5b{background:rgba(192,132,252,0.18);color:#c084fc;}
+.power-bar-bg{background:#1e2d45;height:9px;overflow:hidden;}
+.power-bar-fill{height:100%;transition:width 0.5s ease;}
+
+/* TRAINING PLAN */
+.plan-section-header{
+  font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:13px;letter-spacing:3px;
+  text-transform:uppercase;padding:10px 16px;margin-bottom:6px;display:flex;align-items:center;justify-content:space-between;
+}
+.week-block{margin-bottom:18px;border:1px solid var(--border);}
+.week-title-bar{
+  font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:12px;letter-spacing:2px;
+  padding:9px 14px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;
+  user-select:none;transition:background 0.15s;
+}
+.week-title-bar:hover{background:rgba(255,255,255,0.02);}
+.week-title-bar .wk-num{font-size:14px;font-weight:900;}
+.week-title-bar .wk-meta{font-size:11px;color:var(--muted);letter-spacing:1px;}
+.week-title-bar .wk-toggle{font-size:14px;color:var(--muted);transition:transform 0.2s;}
+.week-title-bar.open .wk-toggle{transform:rotate(90deg);}
+.week-body{display:none;padding:0 0 6px 0;}
+.week-body.open{display:block;}
+.week-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;padding:6px 8px;}
+.day-card{background:var(--panel2);border:1px solid var(--border);padding:8px 7px;min-height:80px;font-family:'Barlow Condensed',sans-serif;}
+.day-name{font-size:10px;font-weight:700;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:6px;}
+.workout-chip{font-size:11px;font-weight:600;padding:3px 6px;margin-bottom:3px;display:block;line-height:1.3;}
+.wk-swim{background:rgba(0,200,255,0.13);color:var(--swim);}.wk-bike{background:rgba(249,168,37,0.13);color:var(--bike);}
+.wk-run{background:rgba(255,77,109,0.13);color:var(--run);}.wk-rest{background:rgba(90,106,128,0.08);color:var(--muted);font-style:italic;}
+.wk-brick{background:rgba(251,146,60,0.13);color:var(--plan);}
+.plan-phase-badge{font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;letter-spacing:2px;
+  text-transform:uppercase;padding:2px 9px;display:inline-block;margin-left:8px;}
+
+/* SUMMARY */
+.summary{margin-top:26px;background:var(--panel);border:1px solid var(--border);padding:20px 24px;}
+.sum-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:2px;}
+.sum-item{background:#0a0e17;padding:15px;text-align:center;}
+.sum-disc{font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;letter-spacing:3px;text-transform:uppercase;margin-bottom:4px;}
+.sum-time{font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:700;line-height:1;}
+.sum-dist{font-size:10px;color:var(--muted);margin-top:3px;}
+.total-time{margin-top:14px;text-align:center;}
+.total-label{font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--muted);}
+.total-val{font-family:'Barlow Condensed',sans-serif;font-size:40px;font-weight:900;letter-spacing:-1px;color:#fff;line-height:1.1;}
+
+@media(max-width:800px){
+  .panel-grid{grid-template-columns:1fr;}
+  header{padding:16px 20px;} .race-bar{padding:10px 20px;}
+  main{padding:20px 16px 60px;} .nav-tab{font-size:12px;padding:12px 14px;}
+  .week-grid{grid-template-columns:repeat(4,1fr);}
+  .pz-grid{grid-template-columns:repeat(3,1fr);}
+}
+@media(max-width:500px){.week-grid{grid-template-columns:repeat(2,1fr);}.pz-grid{grid-template-columns:repeat(2,1fr);}}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <div class="logo">SULONG <span>ENDURANCE</span></div>
+    <div class="tagline">Triathlon Training System</div>
+  </div>
+  <div class="header-controls">
+    <div class="unit-group">
+      <div class="unit-group-label">System</div>
+      <div class="toggle-row">
+        <span id="sys-left" class="on">METRIC</span>
+        <label class="toggle-switch"><input type="checkbox" id="sys-toggle" onchange="applySysToggle()"><span class="toggle-slider"></span></label>
+        <span id="sys-right">IMPERIAL</span>
+      </div>
+    </div>
+    <div class="unit-divider"></div>
+    <div class="unit-group">
+      <div class="unit-group-label">Swim Unit</div>
+      <div class="toggle-row">
+        <span id="sw-unit-left" class="on">M</span>
+        <label class="toggle-switch"><input type="checkbox" id="swim-unit-toggle" onchange="applySwimUnitToggle()"><span class="toggle-slider"></span></label>
+        <span id="sw-unit-right">YD</span>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="race-bar">
+  <span class="bar-label">Race Distance</span>
+  <button class="race-btn" data-race="sprint"  onclick="setRace('sprint',this)">Sprint</button>
+  <button class="race-btn active" data-race="olympic" onclick="setRace('olympic',this)">Olympic</button>
+  <button class="race-btn" data-race="half"   onclick="setRace('half',this)">70.3 Half</button>
+  <button class="race-btn" data-race="full"   onclick="setRace('full',this)">140.6 Full</button>
+  <span id="active-sys-badge" class="sys-badge sys-metric">METRIC</span>
+</div>
+
+<div class="main-nav">
+  <button class="nav-tab active" data-nav="swim" onclick="switchNav('swim')">🏊 Swim</button>
+  <button class="nav-tab" data-nav="bike" onclick="switchNav('bike')">🚴 Bike</button>
+  <button class="nav-tab" data-nav="run"  onclick="switchNav('run')">🏃 Run</button>
+  <button class="nav-tab" data-nav="hr"   onclick="switchNav('hr')">❤️ Heart Rate Zones</button>
+  <button class="nav-tab" data-nav="ftp"  onclick="switchNav('ftp')">⚡ FTP &amp; Power</button>
+  <button class="nav-tab" data-nav="plan" onclick="switchNav('plan')">📅 Training Plan</button>
+</div>
+
+<main>
+
+<!-- SWIM -->
+<div class="section swim active" id="sec-swim">
+  <div class="panel-grid">
+    <div class="card">
+      <div class="card-title">Swim Calculator</div>
+      <div class="field"><label>Calculate</label>
+        <select id="sw-mode" onchange="swimModeChange()">
+          <option value="time">Find Total Time</option>
+          <option value="pace">Find Pace</option>
+          <option value="distance">Find Distance</option>
+        </select></div>
+      <div class="field" id="sw-dist-field"><label>Distance</label>
+        <div class="input-row"><input type="number" id="sw-dist" min="0" placeholder="0"><div class="unit-badge" id="sw-dist-unit">m</div></div></div>
+      <div class="field" id="sw-pace-field"><label>Pace (per <span id="sw-pace-unit-lbl">100m</span>)</label>
+        <div class="input-row">
+          <input type="number" id="sw-pace-min" min="0" max="59" placeholder="1" style="max-width:74px;"><div class="unit-badge">min</div>
+          <input type="number" id="sw-pace-sec" min="0" max="59" placeholder="45" style="max-width:74px;"><div class="unit-badge">sec</div>
+        </div></div>
+      <div class="field" id="sw-time-field" style="display:none"><label>Total Time</label>
+        <div class="input-row">
+          <input type="number" id="sw-time-h" min="0" placeholder="0" style="max-width:64px;"><div class="unit-badge">h</div>
+          <input type="number" id="sw-time-m" min="0" max="59" placeholder="30" style="max-width:64px;"><div class="unit-badge">m</div>
+          <input type="number" id="sw-time-s" min="0" max="59" placeholder="00" style="max-width:64px;"><div class="unit-badge">s</div>
+        </div></div>
+      <div class="field"><label>Pool / Venue</label>
+        <select id="sw-type" onchange="onPoolTypeChange()">
+          <option value="pool25m">Pool 25m (SCM)</option><option value="pool50m">Pool 50m (LCM)</option>
+          <option value="pool25y">Pool 25yd (SCY)</option><option value="open">Open Water</option>
+        </select></div>
+      <button class="calc-btn btn-swim" onclick="calcSwim()">CALCULATE</button>
+    </div>
+    <div class="card swim">
+      <div class="card-title">Swim Results</div>
+      <div class="result-item"><div class="result-label">Distance</div><div><span class="result-value" id="sw-r-dist">—</span><span class="result-unit" id="sw-r-dist-u">m</span></div></div>
+      <div class="result-item"><div class="result-label">Total Time</div><div><span class="result-value" id="sw-r-time">—</span></div></div>
+      <div class="result-item"><div class="result-label">Pace</div><div><span class="result-value" id="sw-r-pace">—</span><span class="result-unit" id="sw-r-pace-u">/ 100m</span></div></div>
+      <div class="result-item"><div class="result-label">Alt Pace</div><div><span class="result-value" id="sw-r-altpace">—</span><span class="result-unit" id="sw-r-altpace-u">/ 100yd</span></div></div>
+      <div class="result-item"><div class="result-label">Speed</div><div><span class="result-value" id="sw-r-speed">—</span><span class="result-unit" id="sw-r-speed-u">km/h</span></div></div>
+      <div class="result-item"><div class="result-label">Pool Laps</div><div><span class="result-value" id="sw-r-laps">—</span><span class="result-unit" id="sw-r-laps-u"></span></div></div>
+      <div class="coach-tip" id="sw-tip"><strong>🧠 Coach Tip</strong><span id="sw-tip-text"></span></div>
+    </div>
+  </div>
+  <div class="pace-zones-card" id="sw-pz-card">
+    <div class="pace-zones-title" style="color:var(--swim)">Swim Training Pace Zones</div>
+    <div class="pz-grid" id="sw-pz-grid"></div>
+  </div>
+  <div class="summary">
+    <div class="bar-label" style="margin-bottom:12px">Race Finish Time Projection</div>
+    <div class="sum-grid">
+      <div class="sum-item"><div class="sum-disc" style="color:var(--swim)">🏊 Swim</div><div class="sum-time" style="color:var(--swim)" id="sum-swim">—</div><div class="sum-dist" id="sum-swim-dist"></div></div>
+      <div class="sum-item"><div class="sum-disc" style="color:var(--bike)">🚴 Bike</div><div class="sum-time" style="color:var(--bike)" id="sum-bike">—</div><div class="sum-dist" id="sum-bike-dist"></div></div>
+      <div class="sum-item"><div class="sum-disc" style="color:var(--run)">🏃 Run</div><div class="sum-time"  style="color:var(--run)"  id="sum-run">—</div><div class="sum-dist" id="sum-run-dist"></div></div>
+    </div>
+    <div class="total-time"><div class="total-label">Estimated Finish Time</div><div class="total-val" id="sum-total">—</div></div>
+  </div>
+</div>
+
+<!-- BIKE -->
+<div class="section bike" id="sec-bike">
+  <div class="panel-grid">
+    <div class="card">
+      <div class="card-title">Bike Calculator</div>
+      <div class="field"><label>Calculate</label>
+        <select id="bike-mode" onchange="bikeModeChange()">
+          <option value="time">Find Total Time</option><option value="speed">Find Speed</option><option value="distance">Find Distance</option>
+        </select></div>
+      <div class="field" id="bk-dist-field"><label>Distance</label>
+        <div class="input-row"><input type="number" id="bk-dist" min="0" placeholder="0"><div class="unit-badge" id="bk-dist-u">km</div></div></div>
+      <div class="field" id="bk-speed-field"><label>Average Speed</label>
+        <div class="input-row"><input type="number" id="bk-speed" min="0" placeholder="0" step="0.1"><div class="unit-badge" id="bk-speed-u">km/h</div></div></div>
+      <div class="field" id="bk-time-field" style="display:none"><label>Total Time</label>
+        <div class="input-row">
+          <input type="number" id="bk-time-h" min="0" placeholder="0" style="max-width:68px;"><div class="unit-badge">h</div>
+          <input type="number" id="bk-time-m" min="0" max="59" placeholder="00" style="max-width:68px;"><div class="unit-badge">m</div>
+        </div></div>
+      <div class="field"><label>Training Zone</label>
+        <select id="bk-zone">
+          <option value="z1">Zone 1 — Recovery</option><option value="z2" selected>Zone 2 — Endurance</option>
+          <option value="z3">Zone 3 — Tempo</option><option value="z4">Zone 4 — Threshold</option><option value="z5">Zone 5 — VO2 Max</option>
+        </select></div>
+      <button class="calc-btn btn-bike" onclick="calcBike()">CALCULATE</button>
+    </div>
+    <div class="card bike">
+      <div class="card-title">Bike Results</div>
+      <div class="result-item"><div class="result-label">Distance</div><div><span class="result-value" id="bk-r-dist">—</span><span class="result-unit" id="bk-r-dist-u">km</span></div></div>
+      <div class="result-item"><div class="result-label">Total Time</div><div><span class="result-value" id="bk-r-time">—</span></div></div>
+      <div class="result-item"><div class="result-label">Avg Speed</div><div><span class="result-value" id="bk-r-speed">—</span><span class="result-unit" id="bk-r-speed-u">km/h</span></div></div>
+      <div class="result-item"><div class="result-label">Alt Speed</div><div><span class="result-value" id="bk-r-altspeed">—</span><span class="result-unit" id="bk-r-altspeed-u">mph</span></div></div>
+      <div class="result-item"><div class="result-label">Pace</div><div><span class="result-value" id="bk-r-pace">—</span><span class="result-unit" id="bk-r-pace-u">min/km</span></div></div>
+      <div class="coach-tip" id="bk-tip"><strong>🧠 Coach Tip</strong><span id="bk-tip-text"></span></div>
+    </div>
+  </div>
+  <div class="pace-zones-card" id="bk-pz-card">
+    <div class="pace-zones-title" style="color:var(--bike)">Bike Training Speed Zones</div>
+    <div class="pz-grid" id="bk-pz-grid"></div>
+  </div>
+</div>
+
+<!-- RUN -->
+<div class="section run" id="sec-run">
+  <div class="panel-grid">
+    <div class="card">
+      <div class="card-title">Run Calculator</div>
+      <div class="field"><label>Calculate</label>
+        <select id="run-mode" onchange="runModeChange()">
+          <option value="time">Find Total Time</option><option value="pace">Find Pace</option><option value="distance">Find Distance</option>
+        </select></div>
+      <div class="field" id="rn-dist-field"><label>Distance</label>
+        <div class="input-row"><input type="number" id="rn-dist" min="0" placeholder="0" step="0.01"><div class="unit-badge" id="rn-dist-u">km</div></div></div>
+      <div class="field" id="rn-pace-field"><label>Pace</label>
+        <div class="input-row">
+          <input type="number" id="rn-pace-min" min="0" max="59" placeholder="5" style="max-width:74px;"><div class="unit-badge">min</div>
+          <input type="number" id="rn-pace-sec" min="0" max="59" placeholder="00" style="max-width:74px;"><div class="unit-badge">sec</div>
+          <div class="unit-badge" id="rn-pace-unit-badge" style="border-left:none">/km</div>
+        </div></div>
+      <div class="field" id="rn-time-field" style="display:none"><label>Total Time</label>
+        <div class="input-row">
+          <input type="number" id="rn-time-h" min="0" placeholder="0" style="max-width:64px;"><div class="unit-badge">h</div>
+          <input type="number" id="rn-time-m" min="0" max="59" placeholder="00" style="max-width:64px;"><div class="unit-badge">m</div>
+          <input type="number" id="rn-time-s" min="0" max="59" placeholder="00" style="max-width:64px;"><div class="unit-badge">s</div>
+        </div></div>
+      <div class="field"><label>Run Type</label>
+        <select id="rn-type">
+          <option value="easy">Easy / Recovery</option><option value="long" selected>Long Run</option>
+          <option value="tempo">Tempo</option><option value="interval">Interval</option><option value="brick">Brick Run (off bike)</option>
+        </select></div>
+      <button class="calc-btn btn-run" onclick="calcRun()">CALCULATE</button>
+    </div>
+    <div class="card run">
+      <div class="card-title">Run Results</div>
+      <div class="result-item"><div class="result-label">Distance</div><div><span class="result-value" id="rn-r-dist">—</span><span class="result-unit" id="rn-r-dist-u">km</span></div></div>
+      <div class="result-item"><div class="result-label">Total Time</div><div><span class="result-value" id="rn-r-time">—</span></div></div>
+      <div class="result-item"><div class="result-label">Pace</div><div><span class="result-value" id="rn-r-pace">—</span><span class="result-unit" id="rn-r-pace-u">min/km</span></div></div>
+      <div class="result-item"><div class="result-label">Alt Pace</div><div><span class="result-value" id="rn-r-altpace">—</span><span class="result-unit" id="rn-r-altpace-u">min/mi</span></div></div>
+      <div class="result-item"><div class="result-label">Speed</div><div><span class="result-value" id="rn-r-speed">—</span><span class="result-unit" id="rn-r-speed-u">km/h</span></div></div>
+      <div class="coach-tip" id="rn-tip"><strong>🧠 Coach Tip</strong><span id="rn-tip-text"></span></div>
+    </div>
+  </div>
+  <div class="pace-zones-card" id="rn-pz-card">
+    <div class="pace-zones-title" style="color:var(--run)">Run Training Pace Zones</div>
+    <div class="pz-grid" id="rn-pz-grid"></div>
+  </div>
+</div>
+
+<!-- HR ZONES -->
+<div class="section" id="sec-hr">
+  <div class="panel-grid" style="margin-bottom:22px">
+    <div class="card">
+      <div class="card-title" style="color:var(--hr)">Heart Rate Zone Calculator</div>
+      <div class="field"><label>Max Heart Rate (bpm)</label>
+        <div class="input-row"><input type="number" id="hr-max" min="100" max="230" placeholder="185"><div class="unit-badge">bpm</div></div>
+        <div style="font-size:11px;color:var(--muted);margin-top:5px">Don't know? Use 220 − age, or a field-tested MHR.</div></div>
+      <div class="field"><label>Resting Heart Rate (bpm)</label>
+        <div class="input-row"><input type="number" id="hr-rest" min="30" max="100" placeholder="55"><div class="unit-badge">bpm</div></div>
+        <div style="font-size:11px;color:var(--muted);margin-top:5px">Used for Karvonen (HRR) method.</div></div>
+      <div class="field"><label>Zone Method</label>
+        <select id="hr-method" onchange="onHrMethodChange()">
+          <option value="max">% Max HR (simple)</option>
+          <option value="karvonen">Karvonen / HRR (accurate)</option>
+          <option value="lthr">LTHR-Based (Joe Friel)</option>
+        </select></div>
+      <div class="field" id="hr-lthr-field" style="display:none"><label>Lactate Threshold HR (bpm)</label>
+        <div class="input-row"><input type="number" id="hr-lthr" min="100" max="220" placeholder="165"><div class="unit-badge">bpm</div></div></div>
+      <div class="field"><label>Discipline</label>
+        <select id="hr-disc"><option value="run">Running</option><option value="bike">Cycling</option><option value="tri">Triathlon (race)</option></select></div>
+      <button class="calc-btn btn-hr" onclick="calcHR()">CALCULATE ZONES</button>
+    </div>
+    <div class="card"><div class="card-title" style="color:var(--hr)">Heart Rate Zones</div>
+      <div id="hr-zone-output"><div style="color:var(--muted);font-size:13px;padding:16px 0">Enter your max HR and press Calculate.</div></div></div>
+  </div>
+  <div class="card">
+    <div class="card-title" style="color:var(--hr)">Zone Reference Guide</div>
+    <table class="zone-table">
+      <tr><th>Zone</th><th>Name</th><th>Feel</th><th>Triathlon Purpose</th></tr>
+      <tr class="zone-row"><td><span class="zone-badge z1">Z1</span></td><td>Recovery</td><td>Very easy — can sing</td><td>Active recovery, warm-up, cool-down. Foundation of adaptation.</td></tr>
+      <tr class="zone-row"><td><span class="zone-badge z2">Z2</span></td><td>Aerobic Base</td><td>Easy — full sentences</td><td>Long rides/runs. 70–80% of all training. Fat-burning engine.</td></tr>
+      <tr class="zone-row"><td><span class="zone-badge z3">Z3</span></td><td>Tempo</td><td>Moderate — short phrases</td><td>Race sim for 70.3. Builds lactate clearance. Don't overuse.</td></tr>
+      <tr class="zone-row"><td><span class="zone-badge z4">Z4</span></td><td>Threshold</td><td>Hard — one word</td><td>Olympic &amp; Sprint race effort. 20–40min intervals.</td></tr>
+      <tr class="zone-row"><td><span class="zone-badge z5">Z5</span></td><td>VO2 Max</td><td>Very hard — gasping</td><td>3–5min all-out intervals. Maximal aerobic capacity.</td></tr>
+      <tr class="zone-row"><td><span class="zone-badge z5b">Z5b</span></td><td>Anaerobic</td><td>Max — unsustainable</td><td>Sprints &lt;2min. Race finishes and peak power bursts.</td></tr>
+    </table>
+  </div>
+</div>
+
+<!-- FTP -->
+<div class="section" id="sec-ftp">
+  <div class="panel-grid" style="margin-bottom:22px">
+    <div class="card">
+      <div class="card-title" style="color:var(--ftp)">FTP &amp; Power Zone Calculator</div>
+      <div class="field"><label>FTP (Functional Threshold Power)</label>
+        <div class="input-row"><input type="number" id="ftp-val" min="50" max="600" placeholder="220"><div class="unit-badge">W</div></div>
+        <div style="font-size:11px;color:var(--muted);margin-top:5px">Use 95% of best 20-min avg power, or do a Ramp Test.</div></div>
+      <div class="field"><label>Your Weight</label>
+        <div class="input-row"><input type="number" id="ftp-weight" min="30" max="500" placeholder="70" step="0.1"><div class="unit-badge" id="ftp-weight-u">kg</div></div></div>
+      <div class="field"><label>FTP Test Protocol</label>
+        <select id="ftp-protocol">
+          <option value="20min">20-min test (avg × 0.95)</option>
+          <option value="ramp">Ramp test (last min × 0.75)</option>
+          <option value="60min">60-min test (avg = FTP)</option>
+        </select></div>
+      <div class="field"><label>Tested Power — for auto-calc</label>
+        <div class="input-row"><input type="number" id="ftp-tested" min="50" max="700" placeholder="232"><div class="unit-badge">W</div></div></div>
+      <button class="calc-btn btn-ftp" onclick="calcFTP()">CALCULATE FTP ZONES</button>
+    </div>
+    <div class="card"><div class="card-title" style="color:var(--ftp)">Power Zones (Coggan)</div>
+      <div id="ftp-zone-output"><div style="color:var(--muted);font-size:13px;padding:16px 0">Enter FTP or tested power to see 7 power zones.</div></div></div>
+  </div>
+  <div class="card"><div class="card-title" style="color:var(--ftp)">W/kg Rating &amp; Category</div>
+    <div id="ftp-wpkg-output" style="color:var(--muted);font-size:13px;padding:4px 0">Calculate FTP with weight to see your power-to-weight ratio.</div></div>
+</div>
+
+<!-- TRAINING PLAN -->
+<div class="section" id="sec-plan">
+  <div class="panel-grid" style="margin-bottom:22px">
+    <div class="card">
+      <div class="card-title" style="color:var(--plan)">Training Plan Generator</div>
+      <div class="field"><label>Target Race</label>
+        <select id="plan-race">
+          <option value="sprint">Sprint Triathlon</option>
+          <option value="olympic" selected>Olympic Triathlon</option>
+          <option value="half">70.3 Half Ironman</option>
+          <option value="full">140.6 Full Ironman</option>
+        </select></div>
+      <div class="field"><label>Training Level</label>
+        <select id="plan-level">
+          <option value="beginner">Beginner (0–5 hrs/wk)</option>
+          <option value="intermediate" selected>Intermediate (6–10 hrs/wk)</option>
+          <option value="advanced">Advanced (11–16 hrs/wk)</option>
+        </select></div>
+      <div class="field"><label>Total Weeks to Race</label>
+        <div class="input-row"><input type="number" id="plan-weeks" min="4" max="36" placeholder="16" value="16"><div class="unit-badge">weeks</div></div></div>
+      <div class="field"><label>Weekly Swim Volume</label>
+        <select id="plan-swim-vol">
+          <option value="low" id="plan-swim-low">Low</option>
+          <option value="med" selected id="plan-swim-med">Medium</option>
+          <option value="high" id="plan-swim-high">High</option>
+        </select></div>
+      <button class="calc-btn btn-plan" onclick="genPlan()">GENERATE FULL PLAN</button>
+    </div>
+    <div class="card"><div class="card-title" style="color:var(--plan)">Plan Overview</div>
+      <div id="plan-overview" style="color:var(--muted);font-size:13px;line-height:1.8">Configure your plan and click Generate to see the full week-by-week schedule.</div></div>
+  </div>
+  <div id="plan-output"></div>
+</div>
+
+</main>
+
+<script>
+// ═══ CONSTANTS ═══
+const KM_TO_MI=0.621371,MI_TO_KM=1.60934,KG_TO_LB=2.20462,LB_TO_KG=0.453592,M_TO_YD=1.09361,YD_TO_M=0.9144;
+
+// EXACT official race distances
+// Swim stored in meters, bike/run stored in km
+const RACES={
+  sprint: {swimM:750,   swimMi:0.5,  bikeKm:20,   bikeMi:12.4, runKm:5,    runMi:3.1},
+  olympic:{swimM:1500,  swimMi:0.93, bikeKm:40,   bikeMi:24.8, runKm:10,   runMi:6.2},
+  half:   {swimM:1900,  swimMi:1.2,  bikeKm:90.1, bikeMi:56,   runKm:21.1, runMi:13.1},
+  full:   {swimM:3860,  swimMi:2.4,  bikeKm:180.2,bikeMi:112,  runKm:42.2, runMi:26.2},
+};
+
+const SWIM_VOL_M={
+  low: {lo:2000,hi:3000,sessions:[1500,1200,1800]},
+  med: {lo:4000,hi:6000,sessions:[2000,1500,2500]},
+  high:{lo:7000,hi:10000,sessions:[3000,2000,4000]}
+};
+
+let imperial=false,useYards=false,currentRace='olympic';
+let raceResults={swim:null,bike:null,run:null};
+
+// ═══ HELPERS ═══
+function fmt(s){
+  if(!isFinite(s)||s<0)return'—';
+  const h=Math.floor(s/3600),m=Math.floor((s%3600)/60),sc=Math.round(s%60);
+  return h>0?`${h}:${p2(m)}:${p2(sc)}`:`${m}:${p2(sc)}`;
+}
+function fmtPace(s){if(!isFinite(s)||s<=0)return'—';return`${Math.floor(s/60)}:${p2(Math.round(s%60))}`;}
+function p2(n){return String(n).padStart(2,'0');}
+function setT(id,v){const e=document.getElementById(id);if(e)e.textContent=v;}
+
+// ═══ UNIT TOGGLES ═══
+function applySysToggle(){
+  imperial=document.getElementById('sys-toggle').checked;
+  document.getElementById('sys-left').className=imperial?'':'on';
+  document.getElementById('sys-right').className=imperial?'on':'';
+  const b=document.getElementById('active-sys-badge');
+  b.className=`sys-badge ${imperial?'sys-imperial':'sys-metric'}`;
+  b.textContent=imperial?'IMPERIAL':'METRIC';
+  refreshAllUnits();
+  updateSwimVolLabels();
+  setRace(currentRace,document.querySelector(`.race-btn[data-race="${currentRace}"]`));
+}
+
+function applySwimUnitToggle(){
+  useYards=document.getElementById('swim-unit-toggle').checked;
+  document.getElementById('sw-unit-left').className=useYards?'':'on';
+  document.getElementById('sw-unit-right').className=useYards?'on':'';
+  refreshSwimUnits();
+  updateSwimVolLabels();
+  const r=RACES[currentRace];
+  if(r) document.getElementById('sw-dist').value=swimDispVal(r.swimM);
+}
+
+function onPoolTypeChange(){
+  if(document.getElementById('sw-type').value==='pool25y'&&!useYards){
+    document.getElementById('swim-unit-toggle').checked=true;
+    useYards=true;
+    document.getElementById('sw-unit-left').className='';
+    document.getElementById('sw-unit-right').className='on';
+    refreshSwimUnits();updateSwimVolLabels();
+  }
+}
+
+function refreshSwimUnits(){
+  const u=useYards?'yd':'m',p=useYards?'100yd':'100m',a=useYards?'100m':'100yd';
+  setT('sw-dist-unit',u);setT('sw-r-dist-u',u);
+  setT('sw-pace-unit-lbl',p);setT('sw-r-pace-u',`/ ${p}`);setT('sw-r-altpace-u',`/ ${a}`);
+}
+
+function refreshAllUnits(){
+  setT('bk-dist-u',imperial?'mi':'km');setT('bk-speed-u',imperial?'mph':'km/h');
+  setT('bk-r-dist-u',imperial?'mi':'km');setT('bk-r-speed-u',imperial?'mph':'km/h');
+  setT('bk-r-altspeed-u',imperial?'km/h':'mph');setT('bk-r-pace-u',imperial?'min/mi':'min/km');
+  setT('rn-dist-u',imperial?'mi':'km');setT('rn-pace-unit-badge',`/${imperial?'mi':'km'}`);
+  setT('rn-r-dist-u',imperial?'mi':'km');setT('rn-r-pace-u',imperial?'min/mi':'min/km');
+  setT('rn-r-altpace-u',imperial?'min/km':'min/mi');setT('rn-r-speed-u',imperial?'mph':'km/h');
+  setT('sw-r-speed-u',imperial?'mph':'km/h');
+  setT('ftp-weight-u',imperial?'lb':'kg');
+}
+
+function swimDispVal(meters){return useYards?Math.round(meters*M_TO_YD):meters;}
+function bikeDispVal(km){return imperial?+RACES[currentRace].bikeMi:km;}
+function runDispVal(km){return imperial?+RACES[currentRace].runMi:km;}
+
+function updateSwimVolLabels(){
+  const f=useYards?M_TO_YD:1,kU=useYards?'k yd':'km';
+  ['low','med','high'].forEach(v=>{
+    const d=SWIM_VOL_M[v];
+    const lo=(d.lo*f/1000).toFixed(1),hi=(d.hi*f/1000).toFixed(1);
+    const cap=v.charAt(0).toUpperCase()+v.slice(1);
+    document.getElementById(`plan-swim-${v}`).textContent=`${cap}  (${lo}–${hi} ${kU}/wk)`;
+  });
+}
+
+// ═══ RACE SELECT ═══
+function setRace(race,btn){
+  currentRace=race;
+  document.querySelectorAll('.race-btn').forEach(b=>b.classList.remove('active'));
+  if(btn)btn.classList.add('active');
+  const r=RACES[race];if(!r)return;
+  // Swim: use exact mi if imperial swim was requested? Swim unit is independent — always use M/YD
+  const swV=swimDispVal(r.swimM);
+  // Bike/Run: use exact official mi or km values
+  const bkV=imperial?r.bikeMi:r.bikeKm;
+  const rnV=imperial?r.runMi:r.runKm;
+  document.getElementById('sw-dist').value=swV;
+  document.getElementById('bk-dist').value=bkV;
+  document.getElementById('rn-dist').value=rnV;
+  const swU=useYards?'yd':'m',bkU=imperial?'mi':'km',rnU=imperial?'mi':'km';
+  setT('sum-swim-dist',`${swV}${swU}`);
+  setT('sum-bike-dist',`${bkV}${bkU}`);
+  setT('sum-run-dist', `${rnV}${rnU}`);
+}
+
+// ═══ NAV ═══
+function switchNav(nav){
+  document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
+  document.querySelector(`.nav-tab[data-nav="${nav}"]`).classList.add('active');
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.getElementById(`sec-${nav}`).classList.add('active');
+}
+
+// ═══ PACE ZONE RENDERERS ═══
+function renderSwimPaceZones(pace100mSec){
+  const zd=[
+    {l:'Z1',n:'Recovery',  c:'#60a5fa',lo:1.35,hi:1.50,p:'Active recovery, warm-up sets'},
+    {l:'Z2',n:'Aerobic',   c:'#4ade80',lo:1.20,hi:1.35,p:'Long steady swims, base building'},
+    {l:'Z3',n:'Threshold', c:'#facc15',lo:1.05,hi:1.20,p:'CSS sets, 400–1500m efforts'},
+    {l:'Z4',n:'Race Pace', c:'#fb923c',lo:0.97,hi:1.05,p:'Race effort, 200–400m reps'},
+    {l:'Z5',n:'Speed',     c:'#f87171',lo:0.88,hi:0.97,p:'Sprint sets, 25–100m reps'},
+  ];
+  const uLen=useYards?100*YD_TO_M:100;
+  let h='';
+  zd.forEach(z=>{
+    const pL=fmtPace(pace100mSec*z.lo*(uLen/100)),pH=fmtPace(pace100mSec*z.hi*(uLen/100));
+    const pU=useYards?'/100yd':'/100m';
+    h+=`<div class="pz-zone" style="border-color:${z.c}22;background:${z.c}08">
+      <div class="pz-label" style="color:${z.c}">${z.l} ${z.n}</div>
+      <div class="pz-pace" style="color:${z.c}">${pL}–${pH}</div>
+      <div class="pz-unit">${pU}</div><div class="pz-purpose">${z.p}</div></div>`;
+  });
+  document.getElementById('sw-pz-grid').innerHTML=h;
+  document.getElementById('sw-pz-card').style.display='block';
+}
+
+function renderBikePaceZones(speedKmh){
+  const zd=[
+    {l:'Z1',n:'Recovery',  c:'#60a5fa',lo:0.65,hi:0.75,p:'Easy spin, no effort. Recovery rides.'},
+    {l:'Z2',n:'Endurance', c:'#4ade80',lo:0.75,hi:0.88,p:'Long rides. Race base. Full conversation.'},
+    {l:'Z3',n:'Tempo',     c:'#facc15',lo:0.88,hi:0.95,p:'Comfortably hard. 70.3 race effort.'},
+    {l:'Z4',n:'Threshold', c:'#fb923c',lo:0.95,hi:1.05,p:'Hard. Olympic race effort. 20–40min blocks.'},
+    {l:'Z5',n:'VO2 Max',   c:'#f87171',lo:1.05,hi:1.18,p:'Very hard. 3–5min intervals.'},
+  ];
+  const sF=imperial?KM_TO_MI:1,sU=imperial?'mph':'km/h';
+  let h='';
+  zd.forEach(z=>{
+    const sL=(speedKmh*z.lo*sF).toFixed(1),sH=(speedKmh*z.hi*sF).toFixed(1);
+    h+=`<div class="pz-zone" style="border-color:${z.c}22;background:${z.c}08">
+      <div class="pz-label" style="color:${z.c}">${z.l} ${z.n}</div>
+      <div class="pz-pace" style="color:${z.c}">${sL}–${sH}</div>
+      <div class="pz-unit">${sU}</div><div class="pz-purpose">${z.p}</div></div>`;
+  });
+  document.getElementById('bk-pz-grid').innerHTML=h;
+  document.getElementById('bk-pz-card').style.display='block';
+}
+
+function renderRunPaceZones(paceSecKm){
+  const zd=[
+    {l:'Z1',n:'Recovery', c:'#60a5fa',lo:1.30,hi:1.50,p:'Easy jog. Post-race recovery.'},
+    {l:'Z2',n:'Aerobic',  c:'#4ade80',lo:1.15,hi:1.30,p:'Long runs, base building.'},
+    {l:'Z3',n:'Tempo',    c:'#facc15',lo:1.05,hi:1.15,p:'Comfortably hard. 20–40min.'},
+    {l:'Z4',n:'Threshold',c:'#fb923c',lo:0.97,hi:1.05,p:'Race pace. Intervals.'},
+    {l:'Z5',n:'Interval', c:'#f87171',lo:0.88,hi:0.97,p:'VO2 pace. 400m–1km reps.'},
+  ];
+  const pF=imperial?MI_TO_KM:1,pU=imperial?'min/mi':'min/km';
+  let h='';
+  zd.forEach(z=>{
+    const pL=fmtPace(paceSecKm*z.lo*pF),pH=fmtPace(paceSecKm*z.hi*pF);
+    h+=`<div class="pz-zone" style="border-color:${z.c}22;background:${z.c}08">
+      <div class="pz-label" style="color:${z.c}">${z.l} ${z.n}</div>
+      <div class="pz-pace" style="color:${z.c}">${pL}–${pH}</div>
+      <div class="pz-unit">${pU}</div><div class="pz-purpose">${z.p}</div></div>`;
+  });
+  document.getElementById('rn-pz-grid').innerHTML=h;
+  document.getElementById('rn-pz-card').style.display='block';
+}
+
+// ═══ SWIM CALC ═══
+function swimModeChange(){
+  const m=document.getElementById('sw-mode').value;
+  document.getElementById('sw-dist-field').style.display=m==='distance'?'none':'';
+  document.getElementById('sw-pace-field').style.display=m==='pace'?'none':'';
+  document.getElementById('sw-time-field').style.display=m==='time'?'none':'block';
+}
+function calcSwim(){
+  const mode=document.getElementById('sw-mode').value,swType=document.getElementById('sw-type').value;
+  let di=parseFloat(document.getElementById('sw-dist').value)||0;
+  const pMin=parseFloat(document.getElementById('sw-pace-min').value)||0;
+  const pSec=parseFloat(document.getElementById('sw-pace-sec').value)||0;
+  const tH=parseFloat(document.getElementById('sw-time-h').value)||0;
+  const tM=parseFloat(document.getElementById('sw-time-m').value)||0;
+  const tS=parseFloat(document.getElementById('sw-time-s').value)||0;
+  let dM=useYards?di*YD_TO_M:di;
+  const uLen=useYards?100*YD_TO_M:100,pPU=pMin*60+pSec,p100m=pPU/uLen*100,timeSec=tH*3600+tM*60+tS;
+  let dC=dM,p=p100m,t=timeSec;
+  if(mode==='time'){if(!dC||!p){alert('Enter distance and pace.');return;}t=(dC/100)*p;}
+  else if(mode==='pace'){if(!dC||!timeSec){alert('Enter distance and time.');return;}p=(timeSec/dC)*100;}
+  else{if(!p||!timeSec){alert('Enter pace and time.');return;}dC=(timeSec/p)*100;}
+  const sKmh=(dC/1000)/(t/3600),sMph=sKmh*KM_TO_MI;
+  const dD=useYards?Math.round(dC*M_TO_YD):Math.round(dC);
+  const pD=fmtPace(p*(uLen/100)),pA=useYards?fmtPace(p):fmtPace(p*(100*M_TO_YD/100));
+  let lapM,lapL;
+  if(swType==='pool50m'){lapM=50;lapL='laps (50m)';}
+  else if(swType==='pool25y'){lapM=25*YD_TO_M;lapL='laps (25yd)';}
+  else if(swType==='open'){lapM=null;lapL='';}
+  else{lapM=25;lapL='laps (25m)';}
+  setT('sw-r-dist',dD);setT('sw-r-time',fmt(t));setT('sw-r-pace',pD);setT('sw-r-altpace',pA);
+  setT('sw-r-speed',imperial?sMph.toFixed(2):sKmh.toFixed(2));
+  setT('sw-r-laps',lapM?Math.ceil(dC/lapM):'Open');setT('sw-r-laps-u',lapL);
+  const tip=p<90?'Elite pace! Focus on stroke efficiency, DPS and bilateral breathing.'
+    :p<120?'Strong swim! Negative split: slightly slower first half, push hard in the second.'
+    :p<150?'Good base. Add pull buoy + paddles 1–2×/wk to improve catch and power transfer.'
+    :'Build technique first. Wetsuit adds ~5–10%. Sight every 10 strokes in open water.';
+  setT('sw-tip-text',tip);document.getElementById('sw-tip').style.display='block';
+  raceResults.swim=t;updateSummary();renderSwimPaceZones(p);
+}
+
+// ═══ BIKE CALC ═══
+function bikeModeChange(){
+  const m=document.getElementById('bike-mode').value;
+  document.getElementById('bk-dist-field').style.display=m==='distance'?'none':'';
+  document.getElementById('bk-speed-field').style.display=m==='speed'?'none':'';
+  document.getElementById('bk-time-field').style.display=m==='time'?'none':'block';
+}
+function calcBike(){
+  const mode=document.getElementById('bike-mode').value,zone=document.getElementById('bk-zone').value;
+  let dI=parseFloat(document.getElementById('bk-dist').value)||0;
+  let sI=parseFloat(document.getElementById('bk-speed').value)||0;
+  const tH=parseFloat(document.getElementById('bk-time-h').value)||0;
+  const tM=parseFloat(document.getElementById('bk-time-m').value)||0;
+  const tSec=(tH*60+tM)*60;
+  let dKm=imperial?dI*MI_TO_KM:dI,sKmh=imperial?sI*MI_TO_KM:sI;
+  let t=tSec,d=dKm,s=sKmh;
+  if(mode==='time'){if(!d||!s){alert('Enter distance and speed.');return;}t=(d/s)*3600;}
+  else if(mode==='speed'){if(!d||!tSec){alert('Enter distance and time.');return;}s=d/(tSec/3600);}
+  else{if(!s||!tSec){alert('Enter speed and time.');return;}d=s*(tSec/3600);}
+  const sMph=s*KM_TO_MI,pSec=imperial?3600/sMph:3600/s;
+  const dD=imperial?(d*KM_TO_MI).toFixed(1):d.toFixed(1);
+  const sD=imperial?sMph.toFixed(1):s.toFixed(1),sA=imperial?s.toFixed(1):sMph.toFixed(1);
+  setT('bk-r-dist',dD);setT('bk-r-time',fmt(t));setT('bk-r-speed',sD);setT('bk-r-altspeed',sA);setT('bk-r-pace',fmtPace(pSec));
+  const tips={z1:'Zone 1 recovery spins. Easy spin, cadence 85–95rpm.',z2:'Zone 2 is your triathlon money zone. Full conversation effort.',
+    z3:'Tempo = 70.3 race effort. 2×20min blocks.',z4:'Threshold! Hard. 4–8min ×4–6 reps. Olympic race effort.',z5:'VO2 Max: 3–5min max, 3min rest. Once per week.'};
+  setT('bk-tip-text',tips[zone]);document.getElementById('bk-tip').style.display='block';
+  raceResults.bike=t;updateSummary();renderBikePaceZones(s);
+}
+
+// ═══ RUN CALC ═══
+function runModeChange(){
+  const m=document.getElementById('run-mode').value;
+  document.getElementById('rn-dist-field').style.display=m==='distance'?'none':'';
+  document.getElementById('rn-pace-field').style.display=m==='pace'?'none':'';
+  document.getElementById('rn-time-field').style.display=m==='time'?'none':'block';
+}
+function calcRun(){
+  const mode=document.getElementById('run-mode').value,rType=document.getElementById('rn-type').value;
+  let dI=parseFloat(document.getElementById('rn-dist').value)||0;
+  const pMin=parseFloat(document.getElementById('rn-pace-min').value)||0;
+  const pSec=parseFloat(document.getElementById('rn-pace-sec').value)||0;
+  const tH=parseFloat(document.getElementById('rn-time-h').value)||0;
+  const tM=parseFloat(document.getElementById('rn-time-m').value)||0;
+  const tS=parseFloat(document.getElementById('rn-time-s').value)||0;
+  const pPU=pMin*60+pSec,tSec=tH*3600+tM*60+tS;
+  let dKm=imperial?dI*MI_TO_KM:dI,pKm=imperial?pPU/MI_TO_KM:pPU;
+  let d=dKm,p=pKm,t=tSec;
+  if(mode==='time'){if(!d||!p){alert('Enter distance and pace.');return;}t=d*p;}
+  else if(mode==='pace'){if(!d||!tSec){alert('Enter distance and time.');return;}p=tSec/d;}
+  else{if(!p||!tSec){alert('Enter pace and time.');return;}d=tSec/p;}
+  const sKmh=3600/p,sMph=sKmh*KM_TO_MI,pMile=p*MI_TO_KM;
+  const dD=imperial?(d*KM_TO_MI).toFixed(2):d.toFixed(2);
+  const pD=imperial?fmtPace(pMile):fmtPace(p),pA=imperial?fmtPace(p):fmtPace(pMile);
+  const sD=imperial?sMph.toFixed(2):sKmh.toFixed(2);
+  setT('rn-r-dist',dD);setT('rn-r-time',fmt(t));setT('rn-r-pace',pD);setT('rn-r-altpace',pA);setT('rn-r-speed',sD);
+  const tips={easy:'Easy = 60–70% HRmax. Full conversation pace. 80% of weekly volume here.',
+    long:'Long run builds aerobic engine. Fuel every 30–45min. Aim for even or negative split.',
+    tempo:'Comfortably hard — one-word answers. 20–40min or 2×20min. Improves lactate clearance.',
+    interval:'Quality over quantity. Full recovery between reps. Log HR and RPE, not just pace.',
+    brick:'First 1–2km will feel heavy — expected. Settle into target pace by km 3.'};
+  setT('rn-tip-text',tips[rType]);document.getElementById('rn-tip').style.display='block';
+  raceResults.run=t;updateSummary();renderRunPaceZones(p);
+}
+
+// ═══ SUMMARY ═══
+function updateSummary(){
+  setT('sum-swim',raceResults.swim?fmt(raceResults.swim):'—');
+  setT('sum-bike',raceResults.bike?fmt(raceResults.bike):'—');
+  setT('sum-run', raceResults.run ?fmt(raceResults.run) :'—');
+  const tot=(raceResults.swim||0)+(raceResults.bike||0)+(raceResults.run||0);
+  setT('sum-total',(raceResults.swim&&raceResults.bike&&raceResults.run)?fmt(tot):'—');
+}
+
+// ═══ HR ZONES ═══
+function onHrMethodChange(){document.getElementById('hr-lthr-field').style.display=document.getElementById('hr-method').value==='lthr'?'':'none';}
+function calcHR(){
+  const maxHR=parseFloat(document.getElementById('hr-max').value);
+  const restHR=parseFloat(document.getElementById('hr-rest').value)||0;
+  const method=document.getElementById('hr-method').value;
+  const lthr=parseFloat(document.getElementById('hr-lthr').value)||0;
+  const disc=document.getElementById('hr-disc').value;
+  if(!maxHR){alert('Enter your Max Heart Rate.');return;}
+  const hrr=maxHR-restHR;let zones;
+  if(method==='karvonen'&&restHR>0){
+    zones=[
+      {name:'Z1 Recovery', lo:Math.round(restHR+hrr*0.50),hi:Math.round(restHR+hrr*0.60),cls:'z1',pct:'50–60% HRR'},
+      {name:'Z2 Aerobic',  lo:Math.round(restHR+hrr*0.60),hi:Math.round(restHR+hrr*0.70),cls:'z2',pct:'60–70% HRR'},
+      {name:'Z3 Tempo',    lo:Math.round(restHR+hrr*0.70),hi:Math.round(restHR+hrr*0.80),cls:'z3',pct:'70–80% HRR'},
+      {name:'Z4 Threshold',lo:Math.round(restHR+hrr*0.80),hi:Math.round(restHR+hrr*0.90),cls:'z4',pct:'80–90% HRR'},
+      {name:'Z5 VO2 Max',  lo:Math.round(restHR+hrr*0.90),hi:maxHR,                       cls:'z5',pct:'90–100% HRR'},
+    ];
+  }else if(method==='lthr'&&lthr>0){
+    zones=[
+      {name:'Z1 Recovery',  lo:Math.round(lthr*0.75),hi:Math.round(lthr*0.85),cls:'z1',pct:'<85% LTHR'},
+      {name:'Z2 Aerobic',   lo:Math.round(lthr*0.85),hi:Math.round(lthr*0.89),cls:'z2',pct:'85–89% LTHR'},
+      {name:'Z3 Tempo',     lo:Math.round(lthr*0.90),hi:Math.round(lthr*0.94),cls:'z3',pct:'90–94% LTHR'},
+      {name:'Z4 Sub-LT',    lo:Math.round(lthr*0.95),hi:Math.round(lthr*0.99),cls:'z4',pct:'95–99% LTHR'},
+      {name:'Z5a At LT',    lo:lthr,                  hi:Math.round(lthr*1.02),cls:'z4',pct:'100–102% LTHR'},
+      {name:'Z5b Supra-LT', lo:Math.round(lthr*1.03), hi:maxHR,                cls:'z5',pct:'>103% LTHR'},
+    ];
+  }else{
+    zones=[
+      {name:'Z1 Recovery', lo:Math.round(maxHR*0.50),hi:Math.round(maxHR*0.60),cls:'z1',pct:'50–60% MHR'},
+      {name:'Z2 Aerobic',  lo:Math.round(maxHR*0.60),hi:Math.round(maxHR*0.70),cls:'z2',pct:'60–70% MHR'},
+      {name:'Z3 Tempo',    lo:Math.round(maxHR*0.70),hi:Math.round(maxHR*0.80),cls:'z3',pct:'70–80% MHR'},
+      {name:'Z4 Threshold',lo:Math.round(maxHR*0.80),hi:Math.round(maxHR*0.90),cls:'z4',pct:'80–90% MHR'},
+      {name:'Z5 VO2 Max',  lo:Math.round(maxHR*0.90),hi:maxHR,                  cls:'z5',pct:'90–100% MHR'},
+    ];
+  }
+  const dN=disc==='bike'?' (bike HR ~5–10bpm lower than run)':disc==='tri'?' (swim −10bpm · bike −5bpm · run = field)':'';
+  let h=`<div style="font-size:11px;color:var(--muted);margin-bottom:10px;font-family:'Barlow Condensed',sans-serif">Max HR: <strong style="color:var(--text)">${maxHR} bpm</strong>${restHR?` · Rest: <strong style="color:var(--text)">${restHR} bpm</strong>`:''}${dN}</div>`;
+  h+=`<table class="zone-table"><tr><th>Zone</th><th>Name</th><th>BPM</th><th>%</th></tr>`;
+  zones.forEach(z=>{h+=`<tr class="zone-row"><td><span class="zone-badge ${z.cls}">${z.name.split(' ')[0]}</span></td><td style="font-size:13px">${z.name.replace(/Z\S+\s/,'')}</td><td><strong>${z.lo}–${z.hi}</strong></td><td style="color:var(--muted);font-size:11px">${z.pct}</td></tr>`;});
+  h+='</table>';document.getElementById('hr-zone-output').innerHTML=h;
+}
+
+// ═══ FTP ═══
+function calcFTP(){
+  const proto=document.getElementById('ftp-protocol').value;
+  const tested=parseFloat(document.getElementById('ftp-tested').value)||0;
+  let ftp=parseFloat(document.getElementById('ftp-val').value)||0;
+  let wIn=parseFloat(document.getElementById('ftp-weight').value)||0;
+  if(tested>0){ftp=proto==='20min'?Math.round(tested*0.95):proto==='ramp'?Math.round(tested*0.75):Math.round(tested);document.getElementById('ftp-val').value=ftp;}
+  if(!ftp){alert('Enter FTP or tested power.');return;}
+  const wKg=imperial?wIn*LB_TO_KG:wIn;
+  const zones=[
+    {n:'Z1 Active Recovery',lo:0,   hi:0.55,c:'#60a5fa'},{n:'Z2 Endurance',lo:0.56,hi:0.75,c:'#4ade80'},
+    {n:'Z3 Tempo',lo:0.76,hi:0.90,c:'#facc15'},{n:'Z4 Threshold',lo:0.91,hi:1.05,c:'#fb923c'},
+    {n:'Z5 VO2 Max',lo:1.06,hi:1.20,c:'#f87171'},{n:'Z6 Anaerobic',lo:1.21,hi:1.50,c:'#c084fc'},
+    {n:'Z7 Neuromuscular',lo:1.51,hi:2.50,c:'#e879f9'},
+  ];
+  let h=`<div style="font-size:11px;color:var(--muted);margin-bottom:12px;font-family:'Barlow Condensed',sans-serif">FTP: <strong style="color:var(--ftp)">${ftp}W</strong>${wKg?' · W/kg: <strong style="color:var(--ftp)">'+(ftp/wKg).toFixed(2)+'</strong>':''}</div>`;
+  h+=`<table class="zone-table"><tr><th>Zone</th><th>Watts</th><th>% FTP</th><th style="width:70px">Bar</th></tr>`;
+  zones.forEach((z,i)=>{
+    const lo=Math.round(ftp*z.lo),hi=Math.round(ftp*z.hi),bW=Math.min(100,z.hi*80);
+    h+=`<tr class="zone-row"><td><span class="zone-badge" style="background:${z.c}22;color:${z.c}">Z${i+1}</span></td><td><strong>${i===0?'<'+hi:(i===6?lo+'+':lo+'–'+hi)}</strong> W</td><td style="color:var(--muted);font-size:11px">${Math.round(z.lo*100)}${i===6?'+':'–'+Math.round(z.hi*100)}%</td><td><div class="power-bar-bg"><div class="power-bar-fill" style="width:${bW}%;background:${z.c}"></div></div></td></tr>`;
+  });
+  h+=`</table><div style="font-size:11px;color:var(--muted);margin-top:10px;line-height:1.6"><strong style="color:var(--text)">Race targets:</strong> Sprint: Z4–Z5 · Olympic: Z3–Z4 · 70.3: Z3 · Ironman: Z2–Z3</div>`;
+  document.getElementById('ftp-zone-output').innerHTML=h;
+  if(wKg>0){
+    const wpkg=ftp/wKg;let cat='',cc='';
+    if(wpkg>=5.0){cat='World Class / Pro';cc='#e879f9';}else if(wpkg>=4.0){cat='Cat 1 / Elite Age Group';cc='#f87171';}
+    else if(wpkg>=3.5){cat='Cat 2 / Competitive';cc='#fb923c';}else if(wpkg>=3.0){cat='Cat 3 / Trained';cc='#facc15';}
+    else if(wpkg>=2.5){cat='Cat 4 / Recreational';cc='#4ade80';}else{cat='Beginner / Building';cc='#60a5fa';}
+    const nx=(Math.ceil(wpkg/0.5)*0.5),wL=imperial?`${wIn.toFixed(1)} lb`:`${wKg.toFixed(1)} kg`;
+    document.getElementById('ftp-wpkg-output').innerHTML=`<div style="font-family:'Barlow Condensed',sans-serif"><span style="font-size:44px;font-weight:900;color:${cc}">${wpkg.toFixed(2)}</span><span style="font-size:16px;color:var(--muted)"> W/kg · ${wL}</span><div style="margin-top:7px"><span class="zone-badge" style="background:${cc}22;color:${cc};font-size:13px">${cat}</span></div><div style="font-size:12px;color:var(--muted);margin-top:9px;line-height:1.7">Target next level: <strong style="color:var(--text)">${(nx*wKg).toFixed(0)}W</strong> FTP (${nx.toFixed(1)} W/kg)</div></div>`;
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// FULL TRAINING PLAN GENERATOR
+// ═══════════════════════════════════════════════════════════════════
+function toggleWeek(wkNum){
+  const bar=document.getElementById(`wk-bar-${wkNum}`);
+  const body=document.getElementById(`wk-body-${wkNum}`);
+  bar.classList.toggle('open');body.classList.toggle('open');
+}
+
+function genPlan(){
+  const race=document.getElementById('plan-race').value;
+  const level=document.getElementById('plan-level').value;
+  const totalWeeks=parseInt(document.getElementById('plan-weeks').value)||16;
+  const swimVol=document.getElementById('plan-swim-vol').value;
+  const sd=SWIM_VOL_M[swimVol].sessions;
+  const rd=RACES[race];
+
+  // Unit helpers
+  const bU=imperial?'mi':'km', rU=imperial?'mi':'km', sU=useYards?'yd':'m';
+  const bF=imperial?KM_TO_MI:1, rF=imperial?KM_TO_MI:1, sF=useYards?M_TO_YD:1;
+  const bD=(n)=>(n*bF).toFixed(1);
+  const rD=(n)=>(n*rF).toFixed(1);
+  const sD=(n)=>Math.round(n*sF);
+
+  // Race distances in display units
+  const raceSwim=sD(rd.swimM), raceBike=imperial?rd.bikeMi:rd.bikeKm, raceRun=imperial?rd.runMi:rd.runKm;
+
+  // Periodization: distribute weeks across phases
+  // Taper = last 1–2 weeks, Peak = ~15% of total, Build = ~35%, Base = rest
+  const taperWks = totalWeeks>=12 ? 2 : 1;
+  const peakWks  = Math.max(1, Math.round(totalWeeks*0.15));
+  const buildWks = Math.max(1, Math.round(totalWeeks*0.35));
+  const baseWks  = totalWeeks - taperWks - peakWks - buildWks;
+
+  // Build array of week phases
+  const phaseList=[];
+  for(let i=0;i<baseWks;i++)  phaseList.push('base');
+  for(let i=0;i<buildWks;i++) phaseList.push('build');
+  for(let i=0;i<peakWks;i++)  phaseList.push('peak');
+  for(let i=0;i<taperWks;i++) phaseList.push('taper');
+
+  // Every 4th week is a recovery/adaptation week (reduce volume ~30%)
+  const isRecovery=(wk)=>(wk%4===0)&&phaseList[wk-1]!=='taper';
+
+  // Volume levels by athlete level
+  const maxLongBikeKm = level==='beginner'?rd.bikeKm*0.60:level==='intermediate'?rd.bikeKm*0.85:rd.bikeKm;
+  const maxLongRunKm  = level==='beginner'?rd.runKm*0.70: level==='intermediate'?rd.runKm*0.90: rd.runKm;
+  const swimSessCount = level==='beginner'?2:level==='intermediate'?3:4;
+  const bikeSessCount = level==='beginner'?3:level==='intermediate'?4:5;
+  const runSessCount  = level==='beginner'?3:level==='intermediate'?4:5;
+
+  // Phase colors & descriptions
+  const phaseCol={base:'#4ade80',build:'#fb923c',peak:'#f87171',taper:'#60a5fa'};
+  const phaseDesc={
+    base:'Aerobic Foundation',build:'Threshold Build',peak:'Race Simulation',taper:'Taper & Rest'
+  };
+  const days=['MON','TUE','WED','THU','FRI','SAT','SUN'];
+
+  // Generate a week's schedule based on phase, week number, and volume factor
+  function makeWeekSchedule(wkNum, phase, volFactor){
+    const vf=volFactor;
+    // Build a week template differently per phase
+    if(race==='sprint'||race==='olympic'){
+      if(phase==='base'){
+        return [
+          [{type:'swim',label:`Swim ${sD(sd[1]*vf)}${sU} Z2 Aerobic`,cls:'wk-swim'},{type:'run',label:`Easy Run ${rD(5*vf)}${rU} Z1–Z2`,cls:'wk-run'}],
+          [{type:'bike',label:`Bike ${bD(30*vf)} ${bU} Z2 Endurance`,cls:'wk-bike'}],
+          [{type:'swim',label:`Swim ${sD(sd[0]*vf)}${sU} Drills+Z2`,cls:'wk-swim'},{type:'run',label:`Easy Run ${rD(4*vf)}${rU} Z2`,cls:'wk-run'}],
+          [{type:'rest',label:'Rest / Yoga / Mobility',cls:'wk-rest'}],
+          [{type:'swim',label:`Swim ${sD(sd[1]*vf)}${sU} Z2`,cls:'wk-swim'},{type:'bike',label:`Bike 45min Z2 Spin`,cls:'wk-bike'}],
+          [{type:'bike',label:`Long Bike ${bD(maxLongBikeKm*0.6*vf)}${bU} Z2`,cls:'wk-bike'}],
+          [{type:'run',label:`Long Run ${rD(maxLongRunKm*0.6*vf)}${rU} Z1–Z2`,cls:'wk-run'}],
+        ];
+      }else if(phase==='build'){
+        return [
+          [{type:'swim',label:`Swim ${sD(sd[0]*vf)}${sU} CSS Intervals`,cls:'wk-swim'},{type:'run',label:`Run ${rD(5*vf)}${rU} Z2`,cls:'wk-run'}],
+          [{type:'bike',label:`Bike ${bD(35*vf)}${bU} Z3 Tempo`,cls:'wk-bike'}],
+          [{type:'swim',label:`Swim ${sD(sd[2]*vf)}${sU} Threshold`,cls:'wk-swim'},{type:'run',label:`Tempo Run ${rD(4*vf)}${rU} Z3`,cls:'wk-run'}],
+          [{type:'rest',label:'Rest / Stretch / Foam Roll',cls:'wk-rest'}],
+          [{type:'swim',label:`Swim ${sD(sd[1]*vf)}${sU} Z2`,cls:'wk-swim'},{type:'bike',label:`Bike 40min Z3`,cls:'wk-bike'}],
+          [{type:'brick',label:`Bike ${bD(maxLongBikeKm*0.8*vf)}${bU} Z3 + Run ${rD(raceBike>30?3:2)}${rU} Z3`,cls:'wk-brick'}],
+          [{type:'run',label:`Long Run ${rD(maxLongRunKm*0.8*vf)}${rU} Z2`,cls:'wk-run'}],
+        ];
+      }else if(phase==='peak'){
+        return [
+          [{type:'swim',label:`Swim ${sD(sd[2]*vf)}${sU} Race Pace`,cls:'wk-swim'},{type:'run',label:`Interval Run 5×800m Z5`,cls:'wk-run'}],
+          [{type:'bike',label:`Bike ${bD(40*vf)}${bU} Z3–Z4 Threshold`,cls:'wk-bike'}],
+          [{type:'swim',label:`Swim ${sD(sd[0]*vf)}${sU} Open Water Sim`,cls:'wk-swim'},{type:'run',label:`Tempo Run ${rD(5*vf)}${rU} Z3–Z4`,cls:'wk-run'}],
+          [{type:'rest',label:'Rest / Active Recovery',cls:'wk-rest'}],
+          [{type:'swim',label:`Swim ${sD(sd[1]*vf)}${sU} Z2`,cls:'wk-swim'},{type:'bike',label:`Bike 45min Z2 Spin`,cls:'wk-bike'}],
+          [{type:'brick',label:`Bike ${bD(maxLongBikeKm*vf)}${bU} Race Pace + Run ${rD(raceRun*0.6)}${rU} Z3`,cls:'wk-brick'}],
+          [{type:'run',label:`Long Run ${rD(maxLongRunKm*vf)}${rU} Z2`,cls:'wk-run'}],
+        ];
+      }else{ // taper
+        return [
+          [{type:'swim',label:`Swim ${sD(sd[1]*0.6)}${sU} Easy Z2`,cls:'wk-swim'},{type:'run',label:`Easy Run ${rD(3)}${rU} Z1`,cls:'wk-run'}],
+          [{type:'bike',label:`Bike 30min Z2 Easy`,cls:'wk-bike'}],
+          [{type:'swim',label:`Swim ${sD(sd[0]*0.5)}${sU} Race Pace strides`,cls:'wk-swim'}],
+          [{type:'rest',label:'Rest / Light Walk',cls:'wk-rest'}],
+          [{type:'swim',label:`Swim ${sD(500)}${sU} Race Warm-up Feel`,cls:'wk-swim'},{type:'bike',label:`Bike 20min Easy Z1`,cls:'wk-bike'}],
+          [{type:'rest',label:'REST — Legs Up. Hydrate. Sleep.',cls:'wk-rest'}],
+          [{type:'brick',label:`RACE DAY 🏁 ${raceSwim}${sU} | ${raceBike}${bU} | ${raceRun}${rU}`,cls:'wk-brick'}],
+        ];
+      }
+    }else if(race==='half'){
+      if(phase==='base'){
+        return [
+          [{type:'swim',label:`Swim ${sD(sd[1]*vf)}${sU} Z2`,cls:'wk-swim'},{type:'run',label:`Easy Run ${rD(8*vf)}${rU} Z1–Z2`,cls:'wk-run'}],
+          [{type:'bike',label:`Bike ${bD(50*vf)}${bU} Z2 Endurance`,cls:'wk-bike'}],
+          [{type:'swim',label:`Swim ${sD(sd[2]*vf)}${sU} Technique`,cls:'wk-swim'},{type:'run',label:`Easy Run ${rD(6*vf)}${rU} Z2`,cls:'wk-run'}],
+          [{type:'bike',label:`Bike 60min Z2 Recovery spin`,cls:'wk-bike'}],
+          [{type:'rest',label:'Rest / Yoga / Stretch',cls:'wk-rest'}],
+          [{type:'brick',label:`Long Bike ${bD(maxLongBikeKm*0.6*vf)}${bU} Z2 + Run ${rD(6*vf)}${rU}`,cls:'wk-brick'}],
+          [{type:'run',label:`Long Run ${rD(maxLongRunKm*0.6*vf)}${rU} Z1–Z2`,cls:'wk-run'},{type:'swim',label:`Swim ${sD(sd[0]*vf)}${sU} easy`,cls:'wk-swim'}],
+        ];
+      }else if(phase==='build'){
+        return [
+          [{type:'swim',label:`Swim ${sD(sd[1]*vf)}${sU} Z2`,cls:'wk-swim'},{type:'run',label:`Run ${rD(8*vf)}${rU} Z2`,cls:'wk-run'}],
+          [{type:'bike',label:`Bike ${bD(70*vf)}${bU} Z2–Z3`,cls:'wk-bike'}],
+          [{type:'swim',label:`Swim ${sD(sd[2]*vf)}${sU} Threshold`,cls:'wk-swim'},{type:'run',label:`Tempo Run ${rD(7*vf)}${rU} Z3`,cls:'wk-run'}],
+          [{type:'bike',label:`Bike 75min Z2`,cls:'wk-bike'}],
+          [{type:'rest',label:'Rest / Foam Roll / Sleep',cls:'wk-rest'}],
+          [{type:'brick',label:`Bike ${bD(maxLongBikeKm*0.8*vf)}${bU} Z2–Z3 + Run ${rD(8*vf)}${rU}`,cls:'wk-brick'}],
+          [{type:'run',label:`Long Run ${rD(maxLongRunKm*0.8*vf)}${rU} Z2`,cls:'wk-run'},{type:'swim',label:`Swim ${sD(sd[0]*vf)}${sU} Z2`,cls:'wk-swim'}],
+        ];
+      }else if(phase==='peak'){
+        return [
+          [{type:'swim',label:`Swim ${sD(sd[2]*vf)}${sU} Race Pace`,cls:'wk-swim'},{type:'run',label:`Interval Run 4×1${rU} Z4–Z5`,cls:'wk-run'}],
+          [{type:'bike',label:`Bike ${bD(80*vf)}${bU} Z3 Race Sim`,cls:'wk-bike'}],
+          [{type:'swim',label:`Swim ${sD(sd[1]*vf)}${sU} Open Water`,cls:'wk-swim'},{type:'run',label:`Tempo Run ${rD(8*vf)}${rU} Z3`,cls:'wk-run'}],
+          [{type:'bike',label:`Bike 60min Z2`,cls:'wk-bike'}],
+          [{type:'rest',label:'Rest / Active Recovery',cls:'wk-rest'}],
+          [{type:'brick',label:`Bike ${bD(maxLongBikeKm*vf)}${bU} Z3 + Run ${rD(raceRun*0.6)}${rU} Z3`,cls:'wk-brick'}],
+          [{type:'run',label:`Long Run ${rD(maxLongRunKm*vf)}${rU} Z2`,cls:'wk-run'},{type:'swim',label:`Swim ${sD(sd[0]*vf)}${sU}`,cls:'wk-swim'}],
+        ];
+      }else{ // taper
+        const isLastTaper=wkNum===totalWeeks;
+        return isLastTaper?[
+          [{type:'swim',label:`Swim ${sD(sd[1]*0.5)}${sU} Easy`,cls:'wk-swim'},{type:'run',label:`Easy Jog ${rD(4)}${rU} Z1`,cls:'wk-run'}],
+          [{type:'bike',label:`Bike 30min Easy Z1`,cls:'wk-bike'}],
+          [{type:'swim',label:`Swim ${sD(500)}${sU} Feel`,cls:'wk-swim'}],
+          [{type:'rest',label:'Rest / Prep Race Gear',cls:'wk-rest'}],
+          [{type:'swim',label:`Open Water Warm-up ${sD(300)}${sU}`,cls:'wk-swim'},{type:'bike',label:`Bike 15min Z1`,cls:'wk-bike'}],
+          [{type:'rest',label:'REST — Hydrate. Sleep Early.',cls:'wk-rest'}],
+          [{type:'brick',label:`RACE DAY 🏁 ${raceSwim}${sU} | ${raceBike}${bU} | ${raceRun}${rU}`,cls:'wk-brick'}],
+        ]:[
+          [{type:'swim',label:`Swim ${sD(sd[1]*0.7)}${sU} Easy Z2`,cls:'wk-swim'},{type:'run',label:`Easy Run ${rD(6)}${rU} Z1`,cls:'wk-run'}],
+          [{type:'bike',label:`Bike 45min Z2 Easy`,cls:'wk-bike'}],
+          [{type:'swim',label:`Swim ${sD(sd[0]*0.6)}${sU} Strides`,cls:'wk-swim'},{type:'run',label:`Run ${rD(4)}${rU} Z2 Strides`,cls:'wk-run'}],
+          [{type:'rest',label:'Rest / Light Stretch',cls:'wk-rest'}],
+          [{type:'swim',label:`Swim ${sD(sd[1]*0.5)}${sU} Easy`,cls:'wk-swim'},{type:'bike',label:`Bike 30min Z1`,cls:'wk-bike'}],
+          [{type:'bike',label:`Bike ${bD(30)}${bU} Z2 Easy spin`,cls:'wk-bike'}],
+          [{type:'run',label:`Easy Run ${rD(8)}${rU} Z1–Z2`,cls:'wk-run'}],
+        ];
+      }
+    }else{ // full ironman
+      if(phase==='base'){
+        return [
+          [{type:'swim',label:`Swim ${sD(sd[1]*vf)}${sU} Z2`,cls:'wk-swim'},{type:'run',label:`Easy Run ${rD(10*vf)}${rU} Z1–Z2`,cls:'wk-run'}],
+          [{type:'bike',label:`Bike ${bD(80*vf)}${bU} Z2 Endurance`,cls:'wk-bike'}],
+          [{type:'swim',label:`Swim ${sD(sd[2]*vf)}${sU} Technique`,cls:'wk-swim'},{type:'run',label:`Easy Run ${rD(8*vf)}${rU} Z2`,cls:'wk-run'}],
+          [{type:'bike',label:`Bike 90min Z2 + Run ${rD(4*vf)}${rU} (Brick)`,cls:'wk-brick'}],
+          [{type:'rest',label:'Rest / Yoga / Stretch',cls:'wk-rest'}],
+          [{type:'brick',label:`Long Bike ${bD(maxLongBikeKm*0.55*vf)}${bU} Z2 + Run ${rD(8*vf)}${rU}`,cls:'wk-brick'}],
+          [{type:'run',label:`Long Run ${rD(maxLongRunKm*0.55*vf)}${rU} Z1–Z2`,cls:'wk-run'},{type:'swim',label:`Swim ${sD(sd[0]*vf)}${sU} easy`,cls:'wk-swim'}],
+        ];
+      }else if(phase==='build'){
+        return [
+          [{type:'swim',label:`Swim ${sD(sd[1]*vf)}${sU} Z2`,cls:'wk-swim'},{type:'run',label:`Run ${rD(12*vf)}${rU} Z2`,cls:'wk-run'}],
+          [{type:'bike',label:`Bike ${bD(100*vf)}${bU} Z2–Z3`,cls:'wk-bike'}],
+          [{type:'swim',label:`Swim ${sD(sd[2]*vf)}${sU} Threshold`,cls:'wk-swim'},{type:'run',label:`Tempo Run ${rD(8*vf)}${rU} Z3`,cls:'wk-run'}],
+          [{type:'bike',label:`Bike 2hr Z2 + Run ${rD(6*vf)}${rU} Z2 (Brick)`,cls:'wk-brick'}],
+          [{type:'rest',label:'Rest / Foam Roll',cls:'wk-rest'}],
+          [{type:'brick',label:`Long Bike ${bD(maxLongBikeKm*0.8*vf)}${bU} Z2 + Run ${rD(10*vf)}${rU}`,cls:'wk-brick'}],
+          [{type:'run',label:`Long Run ${rD(maxLongRunKm*0.8*vf)}${rU} Z2`,cls:'wk-run'},{type:'swim',label:`Swim ${sD(sd[0]*vf)}${sU} Z2`,cls:'wk-swim'}],
+        ];
+      }else if(phase==='peak'){
+        return [
+          [{type:'swim',label:`Swim ${sD(sd[2]*vf)}${sU} Race Pace`,cls:'wk-swim'},{type:'run',label:`Run ${rD(12*vf)}${rU} incl. 5km Z3`,cls:'wk-run'}],
+          [{type:'bike',label:`Bike ${bD(120*vf)}${bU} Z2–Z3 Race Sim`,cls:'wk-bike'}],
+          [{type:'swim',label:`Swim ${sD(sd[1]*vf)}${sU} Open Water`,cls:'wk-swim'},{type:'run',label:`Tempo Run ${rD(10*vf)}${rU} Z3`,cls:'wk-run'}],
+          [{type:'bike',label:`Bike 2.5hr Z2 + Run ${rD(8*vf)}${rU} Z3 (Brick)`,cls:'wk-brick'}],
+          [{type:'rest',label:'Rest / Recovery Protocol',cls:'wk-rest'}],
+          [{type:'brick',label:`Long Bike ${bD(maxLongBikeKm*vf)}${bU} Z2–Z3 + Run ${rD(raceRun*0.5)}${rU}`,cls:'wk-brick'}],
+          [{type:'run',label:`Long Run ${rD(maxLongRunKm*vf)}${rU} Z2`,cls:'wk-run'},{type:'swim',label:`Swim ${sD(sd[0]*vf)}${sU}`,cls:'wk-swim'}],
+        ];
+      }else{ // taper
+        const isLastTaper=wkNum===totalWeeks;
+        return isLastTaper?[
+          [{type:'swim',label:`Swim ${sD(sd[1]*0.5)}${sU} Easy Z1`,cls:'wk-swim'},{type:'run',label:`Easy Run ${rD(5)}${rU} Z1`,cls:'wk-run'}],
+          [{type:'bike',label:`Bike 40min Easy Z1`,cls:'wk-bike'}],
+          [{type:'swim',label:`Swim ${sD(600)}${sU} Feel`,cls:'wk-swim'}],
+          [{type:'rest',label:'Rest / Race Gear Check',cls:'wk-rest'}],
+          [{type:'swim',label:`OW Warm-up ${sD(400)}${sU}`,cls:'wk-swim'},{type:'bike',label:`Bike 20min Z1 legs`,cls:'wk-bike'}],
+          [{type:'rest',label:'COMPLETE REST — Hydrate. Eat. Sleep.',cls:'wk-rest'}],
+          [{type:'brick',label:`RACE DAY 🏁 ${raceSwim}${sU} | ${raceBike}${bU} | ${raceRun}${rU}`,cls:'wk-brick'}],
+        ]:[
+          [{type:'swim',label:`Swim ${sD(sd[1]*0.6)}${sU} Easy Z2`,cls:'wk-swim'},{type:'run',label:`Easy Run ${rD(8)}${rU} Z1`,cls:'wk-run'}],
+          [{type:'bike',label:`Bike 60min Z2 Easy`,cls:'wk-bike'}],
+          [{type:'swim',label:`Swim ${sD(sd[0]*0.5)}${sU} Strides`,cls:'wk-swim'},{type:'run',label:`Run ${rD(5)}${rU} Z2 Strides`,cls:'wk-run'}],
+          [{type:'rest',label:'Rest',cls:'wk-rest'}],
+          [{type:'swim',label:`Swim ${sD(sd[1]*0.5)}${sU} Easy`,cls:'wk-swim'},{type:'bike',label:`Bike 45min Z1`,cls:'wk-bike'}],
+          [{type:'bike',label:`Bike ${bD(40)}${bU} Z2 Easy`,cls:'wk-bike'}],
+          [{type:'run',label:`Easy Run ${rD(10)}${rU} Z1–Z2`,cls:'wk-run'}],
+        ];
+      }
+    }
+  }
+
+  // Render overview
+  const swimVolDisp=useYards?`${Math.round(sd.reduce((a,b)=>a+b,0)*M_TO_YD)} yd`:`${(sd.reduce((a,b)=>a+b,0)/1000).toFixed(1)} km`;
+  const lvlBike=(imperial?(maxLongBikeKm*KM_TO_MI).toFixed(1):maxLongBikeKm.toFixed(1))+''+bU;
+  const lvlRun=(imperial?(maxLongRunKm*KM_TO_MI).toFixed(1):maxLongRunKm.toFixed(1))+''+rU;
+  document.getElementById('plan-overview').innerHTML=`
+    <div style="font-family:'Barlow Condensed',sans-serif;line-height:2;font-size:14px">
+      <div>📋 <strong style="color:var(--text)">${totalWeeks}-Week Plan</strong> · ${document.getElementById('plan-race').options[document.getElementById('plan-race').selectedIndex].text}</div>
+      <div>🏊 Swim: <strong style="color:var(--swim)">${swimSessCount}×/week</strong> · ~${swimVolDisp}/wk</div>
+      <div>🚴 Bike: <strong style="color:var(--bike)">${bikeSessCount}×/week</strong> · Peak long ride: ~${lvlBike}</div>
+      <div>🏃 Run: <strong style="color:var(--run)">${runSessCount}×/week</strong> · Peak long run: ~${lvlRun}</div>
+      <hr style="border-color:var(--border);margin:10px 0">
+      <div style="font-size:11px;color:var(--muted);line-height:1.8">
+        <span style="color:#4ade80">▪ Base ${baseWks}wk</span> →
+        <span style="color:#fb923c">▪ Build ${buildWks}wk</span> →
+        <span style="color:#f87171">▪ Peak ${peakWks}wk</span> →
+        <span style="color:#60a5fa">▪ Taper ${taperWks}wk</span><br>
+        Recovery weeks every 4th week (–30% volume) · 1 full rest day/week
+      </div>
+    </div>`;
+
+  // Generate all weeks HTML
+  let planHtml='';
+  for(let wk=1;wk<=totalWeeks;wk++){
+    const phase=phaseList[wk-1];
+    const rec=isRecovery(wk);
+    const volFactor=rec?0.70:phase==='taper'?0.50:
+      phase==='base'?(0.60+((wk-1)/Math.max(baseWks,1))*0.35):
+      phase==='build'?(0.85+((wk-1-baseWks)/Math.max(buildWks,1))*0.15):
+      1.0;
+    const schedule=makeWeekSchedule(wk,phase,Math.min(1.0,volFactor));
+    const pColor=phaseCol[phase];
+    const weekLabel=wk===totalWeeks?'RACE WEEK':`Week ${wk}`;
+    const recTag=rec?` <span style="color:#60a5fa;font-size:10px;letter-spacing:1px">▪ RECOVERY</span>`:'';
+    const phaseTag=`<span class="plan-phase-badge" style="background:${pColor}22;color:${pColor}">${phaseDesc[phase]}</span>`;
+
+    planHtml+=`<div class="week-block">
+      <div class="week-title-bar" id="wk-bar-${wk}" onclick="toggleWeek(${wk})">
+        <div><span class="wk-num" style="color:${pColor}">${weekLabel}</span>${recTag} ${phaseTag}</div>
+        <div style="display:flex;align-items:center;gap:12px">
+          <span class="wk-meta">${phaseDesc[phase].toUpperCase()}</span>
+          <span class="wk-toggle">▶</span>
+        </div>
+      </div>
+      <div class="week-body" id="wk-body-${wk}">
+        <div class="week-grid">`;
+
+    days.forEach((day,i)=>{
+      planHtml+=`<div class="day-card"><div class="day-name">${day}</div>`;
+      (schedule[i]||[{type:'rest',label:'Rest',cls:'wk-rest'}]).forEach(w=>{
+        planHtml+=`<span class="workout-chip ${w.cls}">${w.label}</span>`;
+      });
+      planHtml+=`</div>`;
+    });
+    planHtml+=`</div></div></div>`;
+  }
+
+  document.getElementById('plan-output').innerHTML=planHtml;
+  // Auto-open week 1
+  toggleWeek(1);
+  // Scroll to plan
+  document.getElementById('plan-output').scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+// ═══ INIT ═══
+setRace('olympic',document.querySelector('.race-btn[data-race="olympic"]'));
+refreshSwimUnits();refreshAllUnits();updateSwimVolLabels();
+</script>
+</body>
+</html>
